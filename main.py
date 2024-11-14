@@ -3,8 +3,8 @@ import torch
 from PIL import Image
 import requests
 from torchvision import transforms
-from torchvision.models import resnet50
 import numpy as np
+from torch.hub import load_state_dict_from_url
 
 # Set page configuration
 st.set_page_config(
@@ -20,7 +20,7 @@ st.write("Upload an image to estimate the number of people in a crowd")
 # Load pre-trained model
 @st.cache_resource
 def load_model():
-    model = resnet50(pretrained=True)
+    model = torch.hub.load('leeyeehoo/CSRNet-pytorch', 'csrnet', pretrained=True)
     model.eval()
     return model
 
@@ -54,15 +54,11 @@ if uploaded_file is not None:
         # Get model prediction
         with torch.no_grad():
             output = model(input_tensor)
-            
-        # Since we're using a general-purpose model, we'll use a simple heuristic
-        # to estimate crowd size based on the model's feature activations
-        feature_map = torch.mean(output)
-        estimated_crowd = int(feature_map.item() * 50)  # Simplified estimation
+            predicted_count = int(output.sum().item())
         
         # Display results
         st.success("Analysis complete!")
-        st.metric("Estimated number of people", estimated_crowd)
+        st.metric("Estimated number of people", predicted_count)
         
         st.info("""
         Note: This is a simplified estimation using a general-purpose image recognition model. 
@@ -77,3 +73,8 @@ with st.sidebar:
     
     The estimation is based on a pre-trained ResNet50 model and provides a rough approximation.
     """)
+
+# Example implementation using CSRNet
+def load_csrnet():
+    model = torch.hub.load('leeyeehoo/CSRNet-pytorch', 'csrnet', pretrained=True)
+    return model
