@@ -2,9 +2,14 @@ import streamlit as st
 import torch
 from PIL import Image
 import requests
-from torchvision import transforms
-import numpy as np
-from torch.hub import load_state_dict_from_url
+from transformers import pipeline
+import openai
+import boto3
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Set page configuration
 st.set_page_config(
@@ -13,30 +18,97 @@ st.set_page_config(
     layout="wide"
 )
 
-# Title and description
+# Configure API credentials
+@st.cache_resource
+def setup_apis():
+    # OpenAI setup
+    openai.api_key = os.getenv('OPENAI_API_KEY')
+    
+    # AWS setup
+    aws_session = boto3.Session(
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.getenv('AWS_REGION', 'us-east-1')
+    )
+    rekognition_client = aws_session.client('rekognition')
+    return rekognition_client
+
+# Load models
+@st.cache_resource
+def load_hf_model():
+    return pipeline("object-detection", model="facebook/detr-resnet-50")
+
+# Model prediction functions
+def predict_huggingface(image, model):
+    # Convert PIL image to RGB if necessary
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # Get predictions
+    results = model(image)
+    
+    # Count people (assuming 'person' is the label we're looking for)
+    person_count = sum(1 for result in results if result['label'] == 'person')
+    return person_count
+
+def predict_openai(image):
+    # Convert image to bytes
+    import io
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
+    
+    # Call OpenAI API
+    response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "How many people are in this image? Please respond with just a number."},
+                    # {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}}
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_byte_arr}"}}
+                ]
+            }
+        ],
+        max_tokens=300
+    )
+    
+    # Extract the number from the response
+    try:
+        count = int(response.choices[0].message.content.strip())
+    except:
+        count = 0
+    return count
+
+def predict_aws(image, rekognition_client):
+    # Convert image to bytes
+    import io
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
+    
+    # Call AWS Rekognition
+    response = rekognition_client.detect_labels(
+        Image={'Bytes': img_byte_arr},
+        MaxLabels=100
+    )
+    
+    # Find 'Person' label and get instance count
+    for label in response['Labels']:
+        if label['Name'] == 'Person':
+            return len(label['Instances'])
+    return 0
+
+# Main Streamlit app
 st.title("Crowd Size Estimator")
 st.write("Upload an image to estimate the number of people in a crowd")
 
-# Load pre-trained model
-@st.cache_resource
-def load_model():
-    model = torch.hub.load('leeyeehoo/CSRNet-pytorch', 'csrnet', pretrained=True)
-    model.eval()
-    return model
-
-model = load_model()
-
-# Image preprocessing function
-def preprocess_image(image):
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        )
-    ])
-    return transform(image).unsqueeze(0)
+# Model selection
+model_option = st.selectbox(
+    "Select Model",
+    ["Hugging Face", "OpenAI 4o-mini", "AWS Rekognition"]
+)
 
 # File uploader
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
@@ -46,35 +118,35 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)
     
-    # Make prediction
+    # Make prediction based on selected model
     with st.spinner("Analyzing image..."):
-        # Preprocess the image
-        input_tensor = preprocess_image(image)
-        
-        # Get model prediction
-        with torch.no_grad():
-            output = model(input_tensor)
-            predicted_count = int(output.sum().item())
-        
-        # Display results
-        st.success("Analysis complete!")
-        st.metric("Estimated number of people", predicted_count)
-        
-        st.info("""
-        Note: This is a simplified estimation using a general-purpose image recognition model. 
-        For more accurate results, a specialized crowd counting model would be needed.
-        """)
+        try:
+            if model_option == "Hugging Face":
+                model = load_hf_model()
+                estimated_crowd = predict_huggingface(image, model)
+            
+            elif model_option == "OpenAI 4o-mini":
+                estimated_crowd = predict_openai(image)
+            
+            else:  # AWS Rekognition
+                rekognition_client = setup_apis()
+                estimated_crowd = predict_aws(image, rekognition_client)
+            
+            # Display results
+            st.success("Analysis complete!")
+            st.metric("Estimated number of people", estimated_crowd)
+            
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
 
 # Add sidebar with information
 with st.sidebar:
     st.header("About")
     st.write("""
-    This app uses computer vision to estimate the number of people in a crowd from an uploaded image.
+    This app uses different AI models to estimate the number of people in a crowd from an uploaded image.
     
-    The estimation is based on a pre-trained ResNet50 model and provides a rough approximation.
+    Available models:
+    - Hugging Face (free, open-source)
+    - OpenAI 4o-mini (requires API key)
+    - AWS Rekognition (requires AWS credentials)
     """)
-
-# Example implementation using CSRNet
-def load_csrnet():
-    model = torch.hub.load('leeyeehoo/CSRNet-pytorch', 'csrnet', pretrained=True)
-    return model
