@@ -4,3 +4,6 @@ crowd_counting_venv
 
 # streamlit
 .streamlit
+
+# environment variables
+.env
