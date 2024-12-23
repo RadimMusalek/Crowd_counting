@@ -7,6 +7,9 @@ import openai
 import boto3
 import os
 from dotenv import load_dotenv
+import base64
+import io
+from openai import OpenAI
 
 
 # Load environment variables
@@ -22,9 +25,6 @@ st.set_page_config(
 # Configure API credentials
 @st.cache_resource
 def setup_apis():
-    # OpenAI setup
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    
     # AWS setup
     aws_session = boto3.Session(
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -56,28 +56,38 @@ def predict_huggingface_resnet(image, model):
 
 
 def predict_openai(image):
-    # Convert image to bytes
-    import io
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    
+    # Initialize OpenAI client
+    client = OpenAI()  # It will use the API key from environment variables
+
+    # Convert PIL image to RGB if necessary
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    # Convert PIL Image to base64
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
     # Call OpenAI API
-    response = openai.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "How many people are in this image? Please respond with just a number."},
-                    # {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image}"}}
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_byte_arr}"}}
+                    {
+                        "type": "text",
+                        "text": "How many people are in this image? Please respond with just a number."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                    }
                 ]
             }
-        ],
-        max_tokens=300
+        ]
     )
-    
+
     # Extract the number from the response
     try:
         count = int(response.choices[0].message.content.strip())
