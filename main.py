@@ -8,6 +8,7 @@ import boto3
 import os
 from dotenv import load_dotenv
 
+
 # Load environment variables
 load_dotenv()
 
@@ -33,13 +34,15 @@ def setup_apis():
     rekognition_client = aws_session.client('rekognition')
     return rekognition_client
 
+
 # Load models
 @st.cache_resource
-def load_hf_model():
+def load_hf_resnet_model():
     return pipeline("object-detection", model="facebook/detr-resnet-50")
 
+
 # Model prediction functions
-def predict_huggingface(image, model):
+def predict_huggingface_resnet(image, model):
     # Convert PIL image to RGB if necessary
     if image.mode != 'RGB':
         image = image.convert('RGB')
@@ -50,6 +53,7 @@ def predict_huggingface(image, model):
     # Count people (assuming 'person' is the label we're looking for)
     person_count = sum(1 for result in results if result['label'] == 'person')
     return person_count
+
 
 def predict_openai(image):
     # Convert image to bytes
@@ -81,6 +85,7 @@ def predict_openai(image):
         count = 0
     return count
 
+
 def predict_aws(image, rekognition_client):
     # Convert image to bytes
     import io
@@ -107,7 +112,7 @@ st.write("Upload an image to estimate the number of people in a crowd")
 # Model selection
 model_option = st.selectbox(
     "Select Model",
-    ["Hugging Face", "OpenAI 4o-mini", "AWS Rekognition"]
+    ["Hugging Face Resnet", "OpenAI 4o-mini", "AWS Rekognition"]
 )
 
 # File uploader
@@ -116,14 +121,14 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png
 if uploaded_file is not None:
     # Display the uploaded image
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded Image", use_container_width=True)
     
     # Make prediction based on selected model
     with st.spinner("Analyzing image..."):
         try:
-            if model_option == "Hugging Face":
-                model = load_hf_model()
-                estimated_crowd = predict_huggingface(image, model)
+            if model_option == "Hugging Face Resnet":
+                model = load_hf_resnet_model()
+                estimated_crowd = predict_huggingface_resnet(image, model)
             
             elif model_option == "OpenAI 4o-mini":
                 estimated_crowd = predict_openai(image)
@@ -146,7 +151,7 @@ with st.sidebar:
     This app uses different AI models to estimate the number of people in a crowd from an uploaded image.
     
     Available models:
-    - Hugging Face (free, open-source)
+    - Hugging Face Resnet (free, open-source)
     - OpenAI 4o-mini (requires API key)
     - AWS Rekognition (requires AWS credentials)
     """)
