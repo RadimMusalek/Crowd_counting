@@ -29,7 +29,7 @@ def setup_apis():
     aws_session = boto3.Session(
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-        region_name=os.getenv('AWS_REGION', 'us-east-1')
+        region_name='eu-west-1' # os.getenv('AWS_REGION')
     )
     rekognition_client = aws_session.client('rekognition')
     return rekognition_client
@@ -97,8 +97,11 @@ def predict_openai(image):
 
 
 def predict_aws(image, rekognition_client):
+    # Convert PIL image to RGB if necessary
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
     # Convert image to bytes
-    import io
     img_byte_arr = io.BytesIO()
     image.save(img_byte_arr, format='PNG')
     img_byte_arr = img_byte_arr.getvalue()
