@@ -1,12 +1,17 @@
 import streamlit as st
 from PIL import Image
+import os
 from project_script_files.openai_model import predict_openai
 from project_script_files.aws_model import predict_aws
 from project_script_files.HF_model import predict_huggingface_resnet, load_hf_resnet_model
-from project_script_files.utils import setup_apis, load_dotenv
+from project_script_files.utils import setup_apis, load_credentials, check_credentials
 
 
 def main():
+    # Add this at the start of main
+    if not check_credentials():
+        st.stop()
+
     # Set page configuration
     st.set_page_config(
         page_title="Crowd Estimator",
@@ -64,10 +69,15 @@ def main():
         - OpenAI 4o-mini (requires API key)
         - AWS Rekognition (requires AWS credentials)
         """)
+        if st.checkbox("Debug Credentials"):
+            st.write("AWS Region:", os.getenv("AWS_REGION"))
+            st.write("OpenAI API:", "✓" if os.getenv("OPENAI_API_KEY") else "✗")
+            st.write("AWS Access:", "✓" if os.getenv("AWS_ACCESS_KEY_ID") else "✗")
+            st.write("HF Token:", "✓" if os.getenv("HUGGINGFACE_TOKEN") else "✗")
 
 if __name__ == "__main__":
     # Load environment variables
-    load_dotenv()
+    load_credentials()
 
     # Run the main function
     main()
