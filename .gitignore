@@ -7,3 +7,6 @@ crowd_counting_venv
 
 # environment variables
 .env
+
+# pycache
+__pycache__

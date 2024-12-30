@@ -1,9 +1,9 @@
 import streamlit as st
 from PIL import Image
-from openai_model import predict_openai
-from aws_model import predict_aws
-from HF_model import predict_huggingface_resnet, load_hf_resnet_model
-from utils import setup_apis, load_dotenv
+from project_script_files.openai_model import predict_openai
+from project_script_files.aws_model import predict_aws
+from project_script_files.HF_model import predict_huggingface_resnet, load_hf_resnet_model
+from project_script_files.utils import setup_apis, load_dotenv
 
 
 def main():
