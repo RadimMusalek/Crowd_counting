@@ -1,79 +1,70 @@
+"""
+Crowd Counting Application
+
+This is the main module for a Streamlit-based crowd counting application that uses
+multiple AI models to estimate the number of people in uploaded images. It supports
+AWS Rekognition, OpenAI Vision, and Hugging Face models for crowd detection.
+The application provides a user-friendly interface for:
+   - Image upload
+   - Model selection
+   - Result visualization
+   - Credential management
+Typical usage:
+   streamlit run main.py
+"""
 import streamlit as st
-from PIL import Image
-import os
-from project_script_files.openai_model import predict_openai
-from project_script_files.aws_model import predict_aws
-from project_script_files.HF_model import predict_huggingface_resnet, load_hf_resnet_model
-from project_script_files.utils import setup_apis, load_credentials, check_credentials
+from project_script_files.utils import load_credentials, check_credentials
+from project_script_files.streamlit_page_setup import setup_page, get_model_selection, display_sidebar, handle_file_upload, process_image
 
 
-def main():
-    # Add this at the start of main
+def main() -> None:
+    """Main application function for the Crowd Counting interface.
+
+    Sets up the Streamlit interface, handles user interactions, and manages
+    the workflow of image upload, model selection, and prediction display.
+
+    The function:
+    - Configures the Streamlit page
+    - Provides model selection
+    - Handles image upload
+    - Processes images through selected models
+    - Displays results
+    - Manages error handling
+
+    Note:
+    - Requires valid API credentials
+    - Supports multiple image formats
+    - Provides real-time feedback
+    - Includes debug options in sidebar
+    """
+    # Check credentials before proceeding
     if not check_credentials():
         st.stop()
+    
+    # Setup page and sidebar
+    setup_page()
+    display_sidebar()
+    
+    # Get model selection
+    model_option = get_model_selection()
+    
+    # Handle file upload
+    image, image_name = handle_file_upload()
 
-    # Set page configuration
-    st.set_page_config(
-        page_title="Crowd Estimator",
-        page_icon="👥",
-        layout="wide"
-    )
-
-    # Main Streamlit app
-    st.title("Crowd Size Estimator")
-    st.write("Upload an image to estimate the number of people in a crowd")
-
-    # Model selection
-    model_option = st.selectbox(
-        "Select Model",
-        ["Hugging Face Resnet", "OpenAI 4o-mini", "AWS Rekognition"]
-    )
-
-    # File uploader
-    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-    if uploaded_file is not None:
-        # Display the uploaded image
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
-        
-        # Make prediction based on selected model
-        with st.spinner("Analyzing image..."):
-            try:
-                if model_option == "Hugging Face Resnet":
-                    model = load_hf_resnet_model()
-                    estimated_crowd = predict_huggingface_resnet(image, model)
-                
-                elif model_option == "OpenAI 4o-mini":
-                    estimated_crowd = predict_openai(image)
-                
-                else:  # AWS Rekognition
-                    rekognition_client = setup_apis()
-                    estimated_crowd = predict_aws(image, rekognition_client)
+    # Process image if upload is successful
+    if image is not None:
+        try:
+            # Process image with selected model
+            with st.spinner("Analyzing image..."):
+                estimated_crowd = process_image(image, model_option)
                 
                 # Display results
                 st.success("Analysis complete!")
-                st.metric("Estimated number of people", estimated_crowd)
+                st.metric("Estimated number of people in " + image_name, estimated_crowd)
                 
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
 
-    # Add sidebar with information
-    with st.sidebar:
-        st.header("About")
-        st.write("""
-        This app uses different AI models to estimate the number of people in a crowd from an uploaded image.
-        
-        Available models:
-        - Hugging Face Resnet (free, open-source)
-        - OpenAI 4o-mini (requires API key)
-        - AWS Rekognition (requires AWS credentials)
-        """)
-        if st.checkbox("Debug Credentials"):
-            st.write("AWS Region:", os.getenv("AWS_REGION"))
-            st.write("OpenAI API:", "✓" if os.getenv("OPENAI_API_KEY") else "✗")
-            st.write("AWS Access:", "✓" if os.getenv("AWS_ACCESS_KEY_ID") else "✗")
-            st.write("HF Token:", "✓" if os.getenv("HUGGINGFACE_TOKEN") else "✗")
 
 if __name__ == "__main__":
     # Load environment variables
