@@ -65,17 +65,41 @@ def load_credentials() -> None:
             - AWS credentials
             - Hugging Face token
     """
-    # For local development
-    if os.path.exists(".env"):
-        load_dotenv()
+    # Local development
+    # Try multiple possible locations for .env file
+    possible_paths = [
+        ".env",  # Current directory
+        "../.env",  # One level up
+        os.path.join(os.path.dirname(__file__), ".env"),  # Same directory as utils.py
+        os.path.join(os.path.dirname(__file__), "../.env")  # One level up from utils.py
+    ]
 
-    # For Streamlit Cloud
-    if st.secrets:
-        os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-        os.environ["AWS_ACCESS_KEY_ID"] = st.secrets["AWS_ACCESS_KEY_ID"]
-        os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
-        os.environ["AWS_REGION"] = st.secrets["AWS_REGION"]
-        os.environ["HUGGINGFACE_TOKEN"] = st.secrets["HUGGINGFACE_TOKEN"]
+    # Try to load from .env file
+    env_loaded = False
+    for path in possible_paths:
+        if os.path.exists(path):
+            load_dotenv(path)
+            print(f"Loaded .env from: {path}")  # Debug print
+            env_loaded = True
+            break
+
+    if not env_loaded:
+        print("No .env file found in any expected location")  # Debug print
+
+        # For Streamlit Cloud
+        try:
+            if st.secrets:
+                os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+                os.environ["AWS_ACCESS_KEY_ID"] = st.secrets["AWS_ACCESS_KEY_ID"]
+                os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
+                os.environ["AWS_REGION"] = st.secrets["AWS_REGION"]
+                os.environ["HUGGINGFACE_TOKEN"] = st.secrets["HUGGINGFACE_TOKEN"]
+        except Exception as e:
+            st.error(f"Couldn't load Streamlit secrets: {str(e)}")
+
+        # Check credentials before proceeding
+        if not check_credentials():
+            st.stop()
 
 
 def check_credentials() -> bool:

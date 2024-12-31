@@ -37,12 +37,13 @@ def main() -> None:
     - Provides real-time feedback
     - Includes debug options in sidebar
     """
-    # Check credentials before proceeding
-    if not check_credentials():
-        st.stop()
-    
-    # Setup page and sidebar
+    # Setup page
     setup_page()
+
+    # Load environment variables
+    load_credentials()
+
+    # Setup sidebar
     display_sidebar()
     
     # Get model selection
@@ -67,8 +68,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # Load environment variables
-    load_credentials()
-
     # Run the main function
     main()
