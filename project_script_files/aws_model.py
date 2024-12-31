@@ -1,9 +1,39 @@
+"""
+AWSRekognition Module for Crowd Counting
+This module provides functionality to detect and count people in images using
+AWS Rekognition service. It handles image preprocessing, resizing for AWS limits,
+and person detection.
+"""
 import io
 import math
 from PIL import Image
+import boto3
 
 
-def predict_aws(image, rekognition_client):
+def predict_aws(image: Image.Image, rekognition_client: boto3.client) -> int:
+    """Predicts the number of people in an image using AWS Rekognition.
+
+    This function processes an image for AWS Rekognition service, including
+    necessary format conversions and size adjustments. It then uses the
+    Rekognition API to detect people in the image.
+
+    Args:
+        image (PIL.Image): Input image in PIL format.
+        rekognition_client: Boto3 Rekognition client instance.
+
+    Returns:
+        int: Number of people detected in the image. Returns 0 if no people
+            are detected or in case of processing errors.
+
+    Raises:
+        PIL.Image.Error: If image conversion fails.
+        boto3.exceptions.Boto3Error: If AWS Rekognition API call fails.
+
+    Note:
+        - Image must be less than 5MB after JPEG conversion
+        - Supported input formats include RGB and RGBA
+        - Image will be automatically resized if it exceeds AWS size limits
+    """
     # Convert PIL image to RGB if necessary
     if image.mode != 'RGB':
         image = image.convert('RGB')
