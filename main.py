@@ -13,7 +13,7 @@ Typical usage:
    streamlit run main.py
 """
 import streamlit as st
-from project_script_files.utils import load_credentials, check_credentials
+from project_script_files.utils import load_credentials
 from project_script_files.streamlit_page_setup import setup_page, get_model_selection, display_sidebar, handle_file_upload, process_image
 
 
