@@ -1,13 +1,13 @@
-# PROJECT NAME
+# CROWD COUNTING REVISITED
 Project introduction and otherview
 
 ## Setup
 Setup description
 
-This project uses **python 3.10.9**. We use virtual environment for development.
+This project uses **python 3.12.3**. We use virtual environment for development.
 
 ```
-python3.10 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 pip3 install --upgrade pip
 pip3 install -r requirements.txt
@@ -17,26 +17,20 @@ Directory structure:
 
 ```
 ├── __pycache__  # gitignored
-├── data  # gitignored
-│   ├── .csv
-│   └── .pdf
-├── logs  # gitignored
-├── models  # gitignored
-│   └── notebook_name.ipynb
+├── .env  # gitignored
+├── .gitignore  # gitignored
+├── main.py
 ├── notebooks
-│   ├── notebook.html
-│   └── notebook.ipynb
+│   └── dev_notebook.ipynb
 ├── README.md
 ├── requirements.txt
-├── results  # gitignored
 └── project_script_files
     ├── __init__.py
-    ├── check.py
-    ├── configs.py
-    ├── constants.py
-    ├── main.py
-    ├── ...
-    └── utils.py
+    ├── utils.py
+    ├── aws_model.py
+    ├── openai_model.py
+    └── HF_model.py
+
 ```
 
 ## Usage
