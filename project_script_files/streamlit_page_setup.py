@@ -74,6 +74,7 @@ def handle_file_upload() -> tuple:
         except Exception as e:
             st.error(f"Error opening image: {str(e)}")
             return None, None
+    return None, None
 
 
 def process_image(image: PIL.Image, model_option: str) -> int:
