@@ -15,6 +15,8 @@ Typical usage:
 import streamlit as st
 from project_script_files.utils import load_credentials
 from project_script_files.streamlit_page_setup import setup_page, get_model_selection, display_sidebar, handle_file_upload, process_image
+from project_script_files.api_limits import APILimiter
+from configs import config
 
 
 def main() -> None:
@@ -43,6 +45,14 @@ def main() -> None:
     # Load environment variables
     load_credentials()
 
+    api_limiter = APILimiter(
+        daily_user_limit=config.DAILY_USER_LIMIT,
+        daily_total_limit=config.DAILY_TOTAL_LIMIT
+    )
+
+    # Display usage stats in sidebar
+    api_limiter.display_usage_stats()
+
     # Setup sidebar
     display_sidebar()
     
@@ -52,21 +62,26 @@ def main() -> None:
     # Handle file upload
     image, image_name = handle_file_upload()
 
-    # Process image if upload is successful
-    if image is not None:
-        try:
-            # Process image with selected model
+    if image is not None: # and model_option != "Select a model":
+        if st.button("Run Analysis"):
+            # Check API limits before processing
+            if model_option in ["OpenAI 4o-mini", "AWS Rekognition"]:
+                if not api_limiter.check_limits():
+                    st.stop()
+            
+            # Process image
             with st.spinner("Analyzing image..."):
                 estimated_crowd = process_image(image, model_option)
-                
-                # Display results
-                st.success("Analysis complete!")
-                st.metric("Estimated number of people in " + image_name, estimated_crowd)
-                
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
+                if estimated_crowd is not None:
+                    # Increment API usage if successful
+                    if model_option in ["OpenAI 4o-mini", "AWS Rekognition"]:
+                        api_limiter.increment_usage()
+                    
+                    st.success("Analysis complete!")
+                    st.metric("Estimated number of people in " + image_name, estimated_crowd)
 
 
 if __name__ == "__main__":
     # Run the main function
     main()
+    
