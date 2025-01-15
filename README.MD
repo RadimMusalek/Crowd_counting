@@ -20,6 +20,7 @@ Directory structure:
 ├── .env  # gitignored
 ├── .gitignore  # gitignored
 ├── main.py
+├── sample_images
 ├── notebooks
 │   └── dev_notebook.ipynb
 ├── README.md
@@ -27,6 +28,7 @@ Directory structure:
 └── project_script_files
     ├── __init__.py
     ├── utils.py
+    ├── streamlit_page_setup.py
     ├── aws_model.py
     ├── openai_model.py
     └── HF_model.py
