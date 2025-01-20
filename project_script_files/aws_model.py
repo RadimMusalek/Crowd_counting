@@ -8,9 +8,10 @@ import io
 import math
 from PIL import Image
 import boto3
+from project_script_files.api_credentials import APICredentialsManager
 
 
-def predict_aws(image: Image.Image, rekognition_client: boto3.client) -> int:
+def predict_aws(image: Image.Image, rekognition_client: boto3.client, api_credentials_manager: APICredentialsManager) -> int:
     """Predicts the number of people in an image using AWS Rekognition.
 
     This function processes an image for AWS Rekognition service, including

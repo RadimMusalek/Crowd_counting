@@ -27,6 +27,8 @@ Directory structure:
 ├── requirements.txt
 └── project_script_files
     ├── __init__.py
+    ├── api_credentials.py
+    ├── api_limiter.py
     ├── utils.py
     ├── streamlit_page_setup.py
     ├── aws_model.py

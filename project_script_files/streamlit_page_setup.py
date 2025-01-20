@@ -9,6 +9,7 @@ from project_script_files.HF_model import predict_huggingface_resnet, load_hf_re
 from project_script_files.openai_model import predict_openai
 from project_script_files.aws_model import predict_aws
 from project_script_files.utils import setup_apis
+from project_script_files.api_credentials import APICredentialsManager
 
 
 def setup_page() -> None:
@@ -104,7 +105,7 @@ def handle_file_upload() -> tuple:
         return None, None
 
 
-def process_image(image: PIL.Image, model_option: str) -> int:
+def process_image(image: PIL.Image, model_option: str, api_credentials_manager: APICredentialsManager) -> int:
     """Processes the image using the selected model.
 
     Args:
@@ -122,11 +123,11 @@ def process_image(image: PIL.Image, model_option: str) -> int:
         return predict_huggingface_resnet(image, model)
 
     elif model_option == "OpenAI 4o-mini":
-        return predict_openai(image)
+        return predict_openai(image, api_credentials_manager)
 
     else:  # AWS Rekognition
         rekognition_client = setup_apis()
-        return predict_aws(image, rekognition_client)
+        return predict_aws(image, rekognition_client, api_credentials_manager)
     
 
 def get_sample_images():

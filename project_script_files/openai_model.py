@@ -11,8 +11,9 @@ import base64
 import io
 from openai import OpenAI, OpenAIError
 from PIL import Image
+from project_script_files.api_credentials import APICredentialsManager
 
-def predict_openai(image: Image.Image) -> int:
+def predict_openai(image: Image.Image, api_credentials_manager: APICredentialsManager) -> int:
     """Predicts the number of people in an image using OpenAI's 4o-mini model.
     This function processes an image for OpenAI's Vision API, including
     necessary format conversions and base64 encoding. It then uses the API

@@ -16,6 +16,7 @@ import streamlit as st
 from project_script_files.utils import load_credentials
 from project_script_files.streamlit_page_setup import setup_page, get_model_selection, display_sidebar, handle_file_upload, process_image
 from project_script_files.api_limits import APILimiter
+from project_script_files.api_credentials import APICredentialsManager
 from configs import config
 
 
@@ -39,19 +40,24 @@ def main() -> None:
     - Provides real-time feedback
     - Includes debug options in sidebar
     """
+
+    # Initialize API limiters and credentials manager
+    api_limiter = APILimiter()
+    api_credentials_manager = APICredentialsManager()
+
     # Setup page
     setup_page()
 
     # Load environment variables
     load_credentials()
 
-    api_limiter = APILimiter(
-        daily_user_limit=config.DAILY_USER_LIMIT,
-        daily_total_limit=config.DAILY_TOTAL_LIMIT
-    )
+    # Display credentials UI in sidebar
+    api_credentials_manager.credentials_ui()
 
-    # Display usage stats in sidebar
-    api_limiter.display_usage_stats()
+    # Display usage stats in sidebar if using default credentials
+    if not (api_credentials_manager.is_using_own_credentials('aws') and 
+            api_credentials_manager.is_using_own_credentials('openai')):
+        api_limiter.display_usage_stats()
 
     # Setup sidebar
     display_sidebar()
@@ -64,17 +70,24 @@ def main() -> None:
 
     if image is not None: # and model_option != "Select a model":
         if st.button("Run Analysis"):
-            # Check API limits before processing
-            if model_option in ["OpenAI 4o-mini", "AWS Rekognition"]:
-                if not api_limiter.check_limits():
-                    st.stop()
+            # Check API limits only if using default credentials
+            if model_option == "OpenAI 4o-mini":
+                if not api_credentials_manager.is_using_own_credentials('openai'):
+                    if not api_limiter.check_limits():
+                        st.stop()
+            elif model_option == "AWS Rekognition":
+                if not api_credentials_manager.is_using_own_credentials('aws'):
+                    if not api_limiter.check_limits():
+                        st.stop()
             
             # Process image
             with st.spinner("Analyzing image..."):
-                estimated_crowd = process_image(image, model_option)
+                estimated_crowd = process_image(image, model_option, api_credentials_manager)
                 if estimated_crowd is not None:
-                    # Increment API usage if successful
-                    if model_option in ["OpenAI 4o-mini", "AWS Rekognition"]:
+                    # Increment API usage if using default credentials
+                    if model_option == "OpenAI 4o-mini" and not api_credentials_manager.is_using_own_credentials('openai'):
+                        api_limiter.increment_usage()
+                    elif model_option == "AWS Rekognition" and not api_credentials_manager.is_using_own_credentials('aws'):
                         api_limiter.increment_usage()
                     
                     st.success("Analysis complete!")
@@ -84,4 +97,3 @@ def main() -> None:
 if __name__ == "__main__":
     # Run the main function
     main()
-    
