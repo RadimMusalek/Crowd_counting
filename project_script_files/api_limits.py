@@ -5,7 +5,7 @@ Uses file-based storage for persistence and Streamlit session state for runtime 
 """
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import streamlit as st
 from configs import config
 

@@ -17,7 +17,6 @@ from project_script_files.utils import load_credentials
 from project_script_files.streamlit_page_setup import setup_page, get_model_selection, display_sidebar, handle_file_upload, process_image
 from project_script_files.api_limits import APILimiter
 from project_script_files.api_credentials import APICredentialsManager
-from configs import config
 
 
 def main() -> None:

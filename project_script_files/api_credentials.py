@@ -4,7 +4,7 @@ Handles user-provided API credentials and determines whether to use default or u
 """
 import streamlit as st
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 class APICredentialsManager:
     """Manages API credentials for different services."""
@@ -23,7 +23,7 @@ class APICredentialsManager:
                 'openai': {}
             }
 
-    def clear_credentials(self):
+    def clear_credentials(self) -> None:
         """Clear all user credentials from session state."""
         st.session_state.using_own_credentials = {
             'aws': False,
@@ -137,7 +137,7 @@ class APICredentialsManager:
         
         return {}
     
-    def clear_service_credentials(self, service: str):
+    def clear_service_credentials(self, service: str) -> None:
         """Clear credentials for a specific service.
         
         Args:
