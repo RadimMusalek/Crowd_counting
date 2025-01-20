@@ -48,9 +48,6 @@ def main() -> None:
     # Setup page
     setup_page()
 
-    # Load environment variables
-    load_credentials()
-
     # Display credentials UI in sidebar
     api_credentials_manager.credentials_ui()
 
@@ -95,5 +92,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Load environment variables once per session
+    load_credentials()  
+    
     # Run the main function
     main()

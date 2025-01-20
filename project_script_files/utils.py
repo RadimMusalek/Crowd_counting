@@ -55,7 +55,7 @@ def load_credentials() -> None:
 
     Attempts to load credentials from local .env file for development
     or Streamlit secrets for cloud deployment. Sets environment variables
-    for all required API services.
+    for all required API services. Only loads once per session.
 
     Note:
         - Checks for local .env file first
@@ -65,6 +65,10 @@ def load_credentials() -> None:
             - AWS credentials
             - Hugging Face token
     """
+    # Check if credentials have already been loaded
+    if 'credentials_loaded' in st.session_state:
+        return
+
     # Local development
     # Try multiple possible locations for .env file
     possible_paths = [
