@@ -59,6 +59,7 @@ streamlit run main.py
 ### Run on Streamlit Cloud
 Application hosted on [Streamlit Cloud](https://radimmusalek-crowdcounting.streamlit.app/)
 
+### How to use the application
 1. Select a model from the dropdown menu
 2. Either:
    - Upload your own image
@@ -115,12 +116,6 @@ The application includes various sample images for testing:
 - Outdoor events (50-500 people)
 - Large gatherings (500+ people)
 - Different lighting conditions and angles
-
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-[Your chosen license]
 
 ## Contact
 musalek.radim@gmail.com
