@@ -1,6 +1,8 @@
 # CROWD COUNTING APPLICATION
 An AI-powered application for estimating crowd sizes in images using multiple machine learning models.
 
+This project is only an MVP to showcase the functionality of various ML models. It doesn't cover any thorough error handling and is not production ready.
+
 ## Overview
 This application provides crowd counting functionality using three different AI models:
 - OpenAI 4o-mini (paid API)
