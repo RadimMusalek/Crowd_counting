@@ -50,10 +50,14 @@ HUGGINGFACE_TOKEN=your_hf_token
 ```
 
 ## Usage
+### Run locally
 Run the Streamlit application:
 ```bash
 streamlit run main.py
 ```
+
+### Run on Streamlit Cloud
+Application hosted on [Streamlit Cloud](https://radimmusalek-crowdcounting.streamlit.app/)
 
 1. Select a model from the dropdown menu
 2. Either:
@@ -127,9 +131,3 @@ musalek.radim@gmail.com
   - OpenAI 4o-mini API
   - AWS Rekognition API
   - Hugging Face
-
-
-Directory structure:
-
-```
-
