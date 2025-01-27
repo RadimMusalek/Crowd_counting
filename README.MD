@@ -108,7 +108,7 @@ Application hosted on [Streamlit Cloud](https://radimmusalek-crowdcounting.strea
 
 ## API Usage Limits
 When using default credentials:
-- Individual users: 5 API calls per day
+- Individual users: 10 API calls per day
 - Total application: 100 API calls per day
 - No limits when using custom API credentials
 

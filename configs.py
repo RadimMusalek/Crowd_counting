@@ -20,7 +20,7 @@ class Config(object):
     API_USAGE_FILE = "api_usage.json"
     API_USAGE_PATH = ROOT_DIR.joinpath(API_USAGE_FILE)
     DAILY_USER_LIMIT = 10
-    DAILY_TOTAL_LIMIT = 50
+    DAILY_TOTAL_LIMIT = 100
 
     #  ADD OTHER CONFIGS
 
